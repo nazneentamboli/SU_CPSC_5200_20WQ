@@ -82,7 +82,7 @@ namespace restapi.Controllers
                 return NotFound();
             }
 
-            if (timecard.CanBeDeleted() == false)
+            if (timecard.Status != TimecardStatus.Cancelled && timecard.Status != TimecardStatus.Draft)
             {
                 return StatusCode(409, new InvalidStateError() { });
             }
@@ -145,6 +145,132 @@ namespace restapi.Controllers
                 return NotFound();
             }
         }
+[HttpPost("{id:guid}/lines/{unique}")]
+        public IActionResult ReplaceLine(Guid id, string unique, [FromBody] DocumentLine identifier)
+        {
+            Timecard timecard = repository.Find(id);
+
+            if (timecard == null)
+            {
+                return NotFound();
+            }
+
+            if(identifier.Resource != timecard.Resource)
+            {
+                return NotFound();
+            }
+
+            if (timecard.Status != TimecardStatus.Draft)
+            {
+                return StatusCode(409, new InvalidStateError() { });
+            }
+
+            for (int i = 0; i < document.Lines.Count; i++)
+            {
+                if (document.Lines.ElementAt(i).UniqueIdentifier.ToString().Equals(unique))
+                {
+                    document.Lines.RemoveAt(i);
+                    document.Lines.Insert(i, new AnnotatedDocumentLine(identifier));
+                    repository.Replace(id, timecard);
+                    return Ok(document.Lines);
+                }
+            }
+            return NotFound();
+        }
+[HttpPatch("{timecardId}/lines/{unique}/{lineId}")]
+        public IActionResult UpdateLineItem(string timecardId, string unique, string lineId, [FromBody]string update)
+        {
+            Timecard timecard = repository.Find(timecardId);
+
+            if (timecard == null)
+            {
+                return NotFound();
+            }
+
+            if (timecard.Status != TimecardStatus.Draft)
+            {
+                return StatusCode(409, new InvalidStateError() { });
+            }
+
+            for (int i = 0; i < document.Lines.Count; i++)
+            {
+                if (document.Lines.ElementAt(i).UniqueIdentifier.ToString().Equals(unique))
+                {
+                    if (lineId == "recorded")
+                    {
+                        DateTime uDate = DateTime.Parse(update);
+                        document.Lines.ElementAt(i).Recorded = uDate;
+                        repository.Replace(timecardId, timecard);
+                        return Ok(document.Lines);
+                    }
+                    if (lineId == "workDate")
+                    {
+                        return NotFound();
+                    }
+                    if (lineId == "lineNumber")
+                    {
+                        document.Lines.ElementAt(i).LineNumber = float.Parse(update);
+                        repository.Replace(timecardId, timecard);
+                        return Ok(document.Lines);
+                    }
+                    if (lineId == "recId")
+                    {
+                        document.Lines.ElementAt(i).RecordIdentity = Int32.Parse(update);
+                        repository.Replace(timecardId, timecard);
+                        return Ok(document.Lines);
+                    }
+                    if (lineId == "recVersion")
+                    {
+                        document.Lines.ElementAt(i).RecordVersion = Int32.Parse(update);
+                        repository.Replace(timecardId, timecard);
+                        return Ok(document.Lines);
+                    }
+                    if (lineId == "uniqueIdentifier")
+                    {
+                        document.Lines.ElementAt(i).UniqueIdentifier = Guid.Parse(update);
+                        repository.Replace(timecardId, timecard);
+                        return Ok(timecard.Lines);
+                    }
+                    if (lineId == "version")
+                    {
+                        document.Lines.ElementAt(i).Version = update;
+                       repository.Replace(timecardId, timecard);
+                        return Ok(timecard.Lines);
+                    }
+                    if (lineId == "week")
+                    {
+                        document.Lines.ElementAt(i).Week = Int32.Parse(update);
+                        repository.Replace(timecardId, timecard);
+                        return Ok(timecard.Lines);
+                    }
+                    if (lineId == "year")
+                    {
+                        document.Lines.ElementAt(i).Year = Int32.Parse(update);
+                        repository.Replace(timecardId, timecard);
+                        return Ok(timecard.Lines);
+                    }
+                    if (lineId == "day")
+                    {
+                        document.Lines.ElementAt(i).Day = (DayOfWeek)Enum.Parse(typeof(DayOfWeek), update);
+                        repository.Replace(timecardId, timecard);
+                        return Ok(timecard.Lines);
+                    }
+                    if (lineId == "hours")
+                    {
+                        document.Lines.ElementAt(i).Hours = float.Parse(update);
+                        repository.Replace(timecardId, timecard);
+                        return Ok(timecard.Lines);
+                    }
+                    if (lineId == "project")
+                    {
+                        document.Lines.ElementAt(i).Project = update;
+                        repository.Replace(timecardId, timecard);
+                        return Ok(timecard.Lines);
+                    }
+                }
+            }
+            return NotFound();
+        }
 
         [HttpGet("{id:guid}/transitions")]
         [Produces(ContentTypes.Transitions)]
@@ -189,7 +315,10 @@ namespace restapi.Controllers
                 {
                     return StatusCode(409, new EmptyTimecardError() { });
                 }
-
+ if (timecard.Resource != submittal.Resource)
+                {
+                    return StatusCode(409, new InvalidStateError() { });
+                }
                 var transition = new Transition(submittal, TimecardStatus.Submitted);
 
                 logger.LogInformation($"Adding submittal {transition}");
@@ -257,7 +386,10 @@ namespace restapi.Controllers
                 {
                     return StatusCode(409, new InvalidStateError() { });
                 }
-
+ if (timecard.Status == TimecardStatus.Draft && timecard.Resource != cancellation.Resource)
+                {
+                    return StatusCode(409, new InvalidStateError() { });
+                }
                 var transition = new Transition(cancellation, TimecardStatus.Cancelled);
 
                 logger.LogInformation($"Adding cancellation transition {transition}");
@@ -325,7 +457,11 @@ namespace restapi.Controllers
                 {
                     return StatusCode(409, new InvalidStateError() { });
                 }
-
+if (timecard.Resource == rejection.Resource)
+                {
+                    return StatusCode(409, new InvalidStateError() { });
+                }
+                
                 var transition = new Transition(rejection, TimecardStatus.Rejected);
 
                 logger.LogInformation($"Adding rejection transition {transition}");
@@ -393,7 +529,11 @@ namespace restapi.Controllers
                 {
                     return StatusCode(409, new InvalidStateError() { });
                 }
-
+if (timecard.Resource == approval.Resource)
+                {
+                    return StatusCode(409, new InvalidStateError() { });
+                }
+                
                 var transition = new Transition(approval, TimecardStatus.Approved);
 
                 logger.LogInformation($"Adding approval transition {transition}");
