@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+ 
+<head>
+    <title>Image Processor Application</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+</head>
+ 
+<body>
+ 
+    <div class="container">
+        <div class="jumbotron">
+            <h3>Input your operations and Upload your image</h3>
+            <p class="lead"></p>
+           <form id="upload-form" action="{{ url_for('imageProcessor') }}" method="POST" enctype="multipart/form-data">
+            <input type="text" name="requests" placeholder="rotate_30" style="width: 400px" required>   
+            <input id="file-picker" type="file" name="file" accept="image/*" class="hidden" onchange="this.form.submit()">
+            <label for="file-picker" class="btn btn-lg btn-success">Select file</label>
+		    </form>
+        </div>
+        <p>
+            <table style="width:40%">
+                <tr>
+                    <th>Transforms</th>
+                    <th>Format</th> 
+                </tr>
+                <tr>
+                    <td>Flip horizontal</td>
+                    <td>flip_h</td> 
+                </tr>
+                <tr>
+                    <td>Flip veritical</td>
+                    <td>flip_v</td> 
+                </tr>
+                <tr>
+                    <td>Rotate left</td>
+                    <td>rotate_left</td> 
+                </tr>
+                <tr>
+                    <td>Rotate right</td>
+                    <td>rotate_right</td> 
+                </tr>
+                <tr>
+                    <td>Rotate degree</td>
+                    <td>rotate_degree</td> 
+                </tr>
+                <tr>
+                    <td>Convert to grayscale</td>
+                    <td>grayscale</td> 
+                </tr>
+                <tr>
+                    <td>Resize</td>
+                    <td>w_length, h_length</td> 
+                </tr>
+                <tr>
+                    <td>Generate a thumbnail</td>
+                    <td>thumbnail</td> 
+                </tr>
+            </table>
+        </p>
+    </div>
+</body>
+ 
+</html>
