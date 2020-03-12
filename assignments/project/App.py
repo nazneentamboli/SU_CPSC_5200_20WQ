@@ -46,7 +46,7 @@ def imageProcessor():
     print(requestList)
     img = Image.open(sourceFile)
 
-    #start modify image
+    # modify image
     for operation in requestList: 
         print(operation)
         each = operation.split("_")
@@ -65,7 +65,7 @@ def imageProcessor():
         else:
             abort(400)
 
-    #save modified file 
+    # save modified file 
     filename = "new " + filename
     print(filename)
     destination = "/".join([target, filename])
