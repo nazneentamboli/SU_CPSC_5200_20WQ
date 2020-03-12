@@ -14,7 +14,7 @@ def send_data_to_server(request, image_path):
         'file': (image_filename, open(image_path, 'rb'))
     }
  
-    response = requests.post(test_url,headers=headers, files=multipart_form_data, data=payload)
+    response = requests.post(test_url, headers=headers, files=multipart_form_data, data=payload)
     
     if response.status_code != 200:
         print('Status:', response.status_code)
