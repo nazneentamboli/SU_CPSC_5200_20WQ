@@ -11,26 +11,26 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 def main():
     requests = request.form['requests']
 
-    #upload file
+#upload file
     target = os.path.join(UPLOAD_FOLDER, './db')
 
-    # create image directory if not found
+# create image directory if not found
     if not os.path.isdir(target):
         os.mkdir(target)
 
-    # retrieve file from html file-picker
+# retrieve file from html file-picker
     upload = request.files['file']
     print("File name: {}".format(upload.filename))
     filename = upload.filename
 
-    # file support verification
+# file support verification
     ext = os.path.splitext(filename)[1]
     if (ext == ".jpg") or (ext == ".png") or (ext == ".jpeg"):
         print("File accepted")
     else:
         abort(400)
 
-    # save original file 
+# save original file 
     sourceFile = "/".join([target, filename])
     if os.path.isfile(sourceFile):
         filename = str(time.time()) + " " + filename
@@ -38,12 +38,12 @@ def main():
     print("File saved to to:", sourceFile)
     upload.save(sourceFile)
 
-     # open and process image
+# open and process image
     requestList = requests.split(",")
     print(requestList)
     img = Image.open(sourceFile)
 
-    #start modify image
+#start modify image
     for operation in requestList: 
         print(operation)
         each = operation.split("_")
@@ -62,7 +62,7 @@ def main():
         else:
             abort(400)
 
-    #save modified file 
+#save modified file 
     filename = "new " + filename
     print(filename)
     destination = "/".join([target, filename])
